@@ -1,6 +1,6 @@
 # SOURCE
 
-### This is a RESTful API based on Flask and Flask-RESTPlus for use with the bev-web-api project
+### This is a RESTful API based on Flask and Flask-RESTPlus for use with the bev-web-app project
 
 #### Getting set up:
  1. git clone https://github.com/cjeustis/bev-web-api.git
