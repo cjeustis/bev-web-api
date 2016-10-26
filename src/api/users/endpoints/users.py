@@ -18,7 +18,7 @@ class UserAccountsCollection(Resource):
         Creates a new user account.
         """
         create_user(request.json)
-        return None, 201
+        return "User created successfully", 201
 
 
 @ns.route('/<int:id>')
@@ -30,7 +30,7 @@ class UserAccount(Resource):
         """
         Returns user account information.
         """
-        return Post.query.filter(Post.id == id).one()
+        return get_user(id)
 
     @api.expect(user)
     @api.response(204, 'User account successfully updated.')

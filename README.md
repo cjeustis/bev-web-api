@@ -9,7 +9,7 @@
  4. source env/bin/activate
  5. pip install -r requirements.txt
  6. export PYTHONPATH=.:$PYTHONPATH
- 7. python bev-web-api/app.py
+ 7. python src/app.py
  8. http://localhost:8888/api/
 
 

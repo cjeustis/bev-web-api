@@ -2,6 +2,7 @@ import logging.config
 from flask import Flask, Blueprint
 from src import settings
 from src.api.users.endpoints.users import ns as users_namespace
+from src.api.recipes.endpoints.recipes import ns as recipes_namespace
 from src.api.restplus import api
 from src.database import db
 
@@ -25,6 +26,7 @@ def initialize_app(flask_app):
     blueprint = Blueprint('api', __name__, url_prefix='/api')
     api.init_app(blueprint)
     api.add_namespace(users_namespace)
+    api.add_namespace(recipes_namespace)
     flask_app.register_blueprint(blueprint)
     db.init_app(flask_app)
 
