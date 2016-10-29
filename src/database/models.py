@@ -2,11 +2,12 @@
 
 from datetime import datetime
 from src.database import db
+from api.restplus import api
 
 
 #User Model
 class User(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
+  id = db.Column('user_id', db.Integer, primary_key=True)
   username = db.Column(db.String(80))
   email = db.Column(db.String(80))
   password = db.Column(db.String(80))
@@ -19,10 +20,7 @@ class User(db.Model):
       created  = datetime.utcnow()
     self.created = created
     self.password = password
-
-  def __repr__(self):
-    return '<User %r>' % self.username
-
+    self.id = 0
 
 
 # Recipe Model
@@ -40,6 +38,3 @@ class Recipe(db.Model):
       created  = datetime.utcnow()
     self.created = created
     self.imageUrl = imageUrl
-
-  def __repr__(self):
-    return '<Recipe %r>' % self.name

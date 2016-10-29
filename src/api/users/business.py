@@ -8,16 +8,14 @@ def create_user(data):
   _email = data.get('email')
   _password = data.get('password')
   user = User(_username, _email, _password)
-  # db.session.add(user)
-  # db.session.commit()
+  db.session.add(user)
+  db.session.commit()
   return user
 
 
 # Try and find an existing user
 def get_user(user_id):
-  user = User.query.filter(Post.id == id).one()
-  if user is None:
-    return "Could not find user with id: " + id
+  user = User.query.filter(User.id == user_id).one()
   return user
 
 
@@ -27,12 +25,13 @@ def update_user(user_id, data):
   user.username = data.get('username')
   user.email = data.get('email')
   user.password = data.get('password')
-  # db.session.add(user)
-  # db.session.commit()
+  db.session.add(user)
+  db.session.commit()
+  return user
 
 
 # Delete an existing user
 def delete_user(user_id):
   user = User.query.filter(User.id == user_id).one()
-  # db.session.delete(user)
-  # db.session.commit()
+  db.session.delete(user)
+  db.session.commit()
