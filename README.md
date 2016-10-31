@@ -13,8 +13,9 @@
  8. http://localhost:8888/api/
 
 
-#### Copy and past this in the terminal window at the root of this directory to execute the commands above
- $ virtualenv env && source env/bin/activate && pip install -r requirements.txt && export PYTHONPATH=.:$PYTHONPATH && python src/app.py 
+#### Copy and past in terminal at the root of this directory to execute the commands above
+ $ virtualenv env && source env/bin/activate && pip install -r requirements.txt && export PYTHONPATH=.:$PYTHONPATH
+ $ python src/app.py
 
 
 #### TODO:

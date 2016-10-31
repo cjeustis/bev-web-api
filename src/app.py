@@ -2,9 +2,8 @@ import logging.config
 from flask import Flask, Blueprint
 from src import settings
 from src.api.users.endpoints.users import ns as users_namespace
-from src.api.recipes.endpoints.recipes import ns as recipes_namespace
 from src.api.restplus import api
-from src.database import db
+from src.database import db, reset_database
 
 app = Flask(__name__)
 logging.config.fileConfig('logging.conf')
@@ -28,7 +27,8 @@ def initialize_app(flask_app):
 
   # Add endpoint namespaces here so we can navigate to them in a browser 
   api.add_namespace(users_namespace)
-  api.add_namespace(recipes_namespace)
+  # api.add_namespace(recipes_namespace)
+
   flask_app.register_blueprint(blueprint)
   db.init_app(flask_app)
   with app.app_context():
