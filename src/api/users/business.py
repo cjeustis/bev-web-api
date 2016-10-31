@@ -27,7 +27,7 @@ def create_user(data):
 
 # Try and find an existing user
 def get_user(user_id):
-  user = User.query.filter_by(id=user_id).first_or_404()
+  user = User.query.join(Recipe).filter_by(id=user_id).first_or_404()
   return user
 
 
@@ -52,8 +52,14 @@ def delete_user(user_id):
 
 # Try and find an existing recipe
 def get_all_recipes(user_id):
-  recipes = Recipe.query.filter(Recipe.user_id == user_id).all()
-  return recipes
+  # Make sure user exists
+  user = User.query.filter(User.id == user_id).first_or_404()
+  
+  if user:
+    recipes = Recipe.query.join(Ingredients).filter(Recipe.user_id == user_id).all()
+    return recipes
+
+  return None
 
 
 # Create a new recipe
@@ -87,17 +93,17 @@ def update_recipe(user_id, recipe_id, data):
   # Make sure user exists
   user = User.query.filter(User.id == user_id).first_or_404()
   if user:
-    recipe = Recipe.query.join(Ingredients).filter(Recipe.id == recipe_id).first_or_404()
+    ourRecipe = Recipe.query.join(Ingredients).filter(Recipe.id == recipe_id).first_or_404()
     ings = []
     for ing in data.get('ingredients'):
       ings.append(Ingredients(ing.get('recipe_id'), ing.get('name')))
-    recipe.user_id = data.get('user_id')
-    recipe.name = data.get('name')
-    recipe.ingredients = ings
-    recipe.imageUrl = data.get('imageUrl')
-    db.session.add(recipe)
+    ourRecipe.user_id = user_id
+    ourRecipe.name = data.get('name')
+    ourRecipe.ingredients = ings
+    ourRecipe.imageUrl = data.get('imageUrl')
+    db.session.add(ourRecipe)
     db.session.commit()
-    return recipe
+    return ourRecipe
 
   return None
 
