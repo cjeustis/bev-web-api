@@ -67,6 +67,18 @@ class UserAccount(Resource):
     delete_user(id)
     return None, 204
 
+  @ns.route('/<int:id>/logout')
+  @api.response(404, "{'message': 'string'}")
+  class UserAccountLogoutCollection(Resource):
+    
+    @auth.login_required
+    def get(self, id):
+      """
+      Logs an authenticated user out.
+      """
+      return unauthenticate_user(id), 200
+
+
   @ns.route('/<int:id>/recipes')
   @api.response(404, "{'message': 'string'}")
   class UserAccountRecipesCollection(Resource):

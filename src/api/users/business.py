@@ -48,6 +48,15 @@ def authenticate_user(data):
     "message": "Error authenticating user. Password is invalid."
   }
 
+
+# Log out a User
+def unauthenticate_user(user_id):
+  global authUser
+  if authUser.id is not "":
+    authUser = User("", "", "")
+  return None
+
+
 # Create a new user
 def create_user(data):
   _username = data.get('username')
