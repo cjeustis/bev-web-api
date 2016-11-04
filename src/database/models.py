@@ -1,11 +1,14 @@
 # http://flask-sqlalchemy.pocoo.org/2.1/quickstart/#simple-relationships
 
 from datetime import datetime
+from passlib.apps import custom_app_context as pwd_context
 from src.database import db
 from api.restplus import api
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 import logging
 
 log = logging.getLogger(__name__)
+secret_key = "this_is_a_secret_0192837465)!@(*#$&^%)"
 
 
 # Ingredients Model
@@ -53,14 +56,38 @@ class User(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   username = db.Column(db.String(80))
   email = db.Column(db.String(80))
-  password = db.Column(db.String(80))
+  password = db.Column(db.String(200))
   created = db.Column(db.DateTime)
   recipes = db.relationship('Recipe', backref='user', lazy='dynamic')
+  _token = ""
+
+
+  def hash_password(self, password):
+    self.password = pwd_context.encrypt(password)
+  
+  def verify_password(self, password):
+    return pwd_context.verify(password, self.password)
+
+  def generate_auth_token(self, expiration = 600):
+    s = Serializer(secret_key, expires_in = expiration)
+    self._token = s.dumps({ 'id': self.id })
+    return self._token
+
+  def verify_auth_token(self):
+    log.info("Token: {}".format(self._token))
+    s = Serializer(secret_key)
+    try:
+      data = s.loads(self._token)
+    except SignatureExpired:
+      return "Expired"
+    except BadSignature:
+      return "Invalid"
+    return "Valid"
 
   def __init__(self, username, email, password, recipes=[], created=None):
     self.username = username
     self.email = email
-    self.password = password      
+    self.password = pwd_context.encrypt(password)
     self.recipes = recipes
     if created is None:
       created  = datetime.utcnow()

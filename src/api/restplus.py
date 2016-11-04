@@ -7,8 +7,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 log = logging.getLogger(__name__)
 
-api = Api(version='1.0', title='Automated Beverages API',
-          description='API for use with the Automated Beverages web application.')
+api = Api(version='1.0', title='MyPotum API',
+          description='API for use with the MyPotum web application.')
 
 
 @api.errorhandler

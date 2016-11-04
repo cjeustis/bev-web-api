@@ -1,10 +1,52 @@
 import logging
+from flask import jsonify
 from src.database import db
 from src.database.models import User, Recipe, Ingredients
+from itsdangerous import JSONWebSignatureSerializer
+from flask.ext.httpauth import HTTPBasicAuth
 
+auth = HTTPBasicAuth()
+authUser = User("", "", "")
 
+secret_key = "this_is_a_secret_0192837465)!@(*#$&^%)"
+s = JSONWebSignatureSerializer(secret_key)
 log = logging.getLogger(__name__)
 
+
+@auth.verify_password
+def verify_password(username_or_token, password):
+  global authUser
+  log.info("username_or_token: {}".format(username_or_token))
+  token_state = authUser.verify_auth_token()
+  log.info("Token state: {}".format(token_state))
+  if token_state is not "Valid":
+    # Try out username/password combo - don't really want this so leave it out for now
+    # user = User.query.filter_by(username=username_or_token).first()
+    # if not user or not user.verify_password(password):
+    log.info("not authenticated")
+    return False
+  log.info("authenticated")
+  return True
+
+
+def authenticate_user(data):
+  global authUser
+  _username = data.get('username')
+  _password = data.get('password')
+
+  authUser = User.query.filter(User.username == _username).first()
+  if authUser is None:
+    return {
+      "message": "Error authenticating user. Username '{}' does not exist.".format(_username)
+    }
+  
+  token = authUser.generate_auth_token()
+  return {
+    "token": token.decode('ascii')
+  }
+  return {
+    "message": "Error authenticating user. Password is invalid."
+  }
 
 # Create a new user
 def create_user(data):
@@ -27,7 +69,7 @@ def create_user(data):
 
 # Try and find an existing user
 def get_user(user_id):
-  user = User.query.join(Recipe).filter_by(id=user_id).first_or_404()
+  user = User.query.filter_by(id=user_id).first_or_404()
   return user
 
 
@@ -86,7 +128,7 @@ def get_recipe(user_id, recipe_id):
     recipe = Recipe.query.join(Ingredients).filter(Recipe.id == recipe_id).first_or_404()
     return recipe
 
-    return None
+  return None
 
 # Update an existing recipe
 def update_recipe(user_id, recipe_id, data):
