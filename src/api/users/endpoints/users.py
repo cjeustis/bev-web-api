@@ -12,11 +12,11 @@ ns = api.namespace('users', description='Operations related to user accounts')
 
 
 """ USER """
-@ns.route('/')
+@ns.route('/register')
 class UserAccountsCollection(Resource):
 
   @api.expect(user_registration)
-  @api.marshal_with(user_info)
+  @api.marshal_with(user_info)  # without this, still saves to db just doesn't know how to return (serialize) the data
   @api.response(404, "{'message': 'string'}")
   def post(self):
     """
@@ -29,8 +29,8 @@ class UserAccountsCollection(Resource):
 class UserAccountsAuthentication(Resource):
 
   @api.expect(user_login)
-  @api.response(201, "User is authenticated", token_required)
-  @api.response(404, "{'message': 'string'}")
+  # @api.response(201, "User is authenticated", user_auth)
+  @api.marshal_with(user_auth)
   def post(self):
     """
     Sign in and authenticate a user.
@@ -42,8 +42,9 @@ class UserAccountsAuthentication(Resource):
 @api.response(404, "{'message': 'string'}")
 class UserAccount(Resource):
 
+
+  @verify_token
   @api.marshal_with(user_info)
-  @auth.login_required
   def get(self, id):
     """
     Returns user account information.
@@ -52,14 +53,14 @@ class UserAccount(Resource):
 
   @api.expect(user_registration)
   @api.marshal_with(user_registration)
-  @auth.login_required
+  @verify_token
   def put(self, id):
     """
     Updates user account information.
     """
     return update_user(id, request.json), 204
 
-  @auth.login_required
+  @verify_token
   def delete(self, id):
     """
     Deletes a user account.
@@ -71,8 +72,8 @@ class UserAccount(Resource):
   @api.response(404, "{'message': 'string'}")
   class UserAccountLogoutCollection(Resource):
     
-    @auth.login_required
-    def get(self, id):
+    @verify_token
+    def post(self, id):
       """
       Logs an authenticated user out.
       """
@@ -85,7 +86,7 @@ class UserAccount(Resource):
     
     @api.expect(recipe)
     @api.marshal_with(recipe)
-    @auth.login_required
+    @verify_token
     def post(self, id):
       """
       Creates a new recipe for a specific user.
@@ -93,8 +94,7 @@ class UserAccount(Resource):
       return create_recipe(id, request.json), 201
   
     @api.marshal_with(recipe)
-    @auth.login_required
-    # @api.response(201, "All the recipes registered for the user", recipe)
+    @verify_token
     def get(self, id):
       """
       Returns all recipes for a user
@@ -106,8 +106,7 @@ class UserAccount(Resource):
     class UserAccountRecipes(Resource):
 
       @api.marshal_with(recipe)
-      @auth.login_required
-      # @api.response(201, "Get a specific recipe associated with the user", recipe)
+      @verify_token
       def get(self, id, recipe_id):
         """
         Returns a specific recipe for a user
@@ -115,15 +114,15 @@ class UserAccount(Resource):
         return get_recipe(id, recipe_id), 201
 
       @api.expect(recipe)
-      # @api.response(204, "Update a specific recipe associated with the user", recipe)
-      @auth.login_required
+      @api.marshal_with(recipe)
+      @verify_token
       def put(self, id, recipe_id):
         """
         Updates information for a specific recipe.
         """
         return update_recipe(id, recipe_id, request.json), 204
 
-      @auth.login_required
+      @verify_token
       def delete(self, id, recipe_id):
         """
         Deletes a specific recipe.

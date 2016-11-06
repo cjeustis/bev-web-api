@@ -1,5 +1,3 @@
-# http://flask-sqlalchemy.pocoo.org/2.1/quickstart/#simple-relationships
-
 from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
 from src.database import db
@@ -61,20 +59,22 @@ class User(db.Model):
   recipes = db.relationship('Recipe', backref='user', lazy='dynamic')
   _token = ""
 
-
   def hash_password(self, password):
     self.password = pwd_context.encrypt(password)
   
   def verify_password(self, password):
     return pwd_context.verify(password, self.password)
 
-  def generate_auth_token(self, expiration = 600):
+  def generate_auth_token(self, expiration = 20):
+    # Check if valid token already exists, otherwise we can generate a new one
+    token_state = self.verify_auth_token()
+    if token_state is "Valid":
+      return self._token
     s = Serializer(secret_key, expires_in = expiration)
     self._token = s.dumps({ 'id': self.id })
     return self._token
 
   def verify_auth_token(self):
-    log.info("Token: {}".format(self._token))
     s = Serializer(secret_key)
     try:
       data = s.loads(self._token)
@@ -84,7 +84,7 @@ class User(db.Model):
       return "Invalid"
     return "Valid"
 
-  def __init__(self, username, email, password, recipes=[], created=None):
+  def __init__(self, username, email, password, createToken=True, recipes=[], created=None):
     self.username = username
     self.email = email
     self.password = pwd_context.encrypt(password)
@@ -92,3 +92,5 @@ class User(db.Model):
     if created is None:
       created  = datetime.utcnow()
     self.created = created
+    if createToken:
+      self._token = self.generate_auth_token()

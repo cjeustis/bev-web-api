@@ -3,7 +3,7 @@ from flask import Flask, Blueprint
 from src import settings
 from src.api.users.endpoints.users import ns as users_namespace
 from src.api.restplus import api
-from src.database import db, reset_database
+from src.database import db, reset_database, init_database
 
 app = Flask(__name__)
 logging.config.fileConfig('logging.conf')
@@ -18,7 +18,15 @@ def configure_app(flask_app):
   flask_app.config['RESTPLUS_VALIDATE'] = settings.RESTPLUS_VALIDATE
   flask_app.config['RESTPLUS_MASK_SWAGGER'] = settings.RESTPLUS_MASK_SWAGGER
   flask_app.config['ERROR_404_HELP'] = settings.RESTPLUS_ERROR_404_HELP
-
+  flask_app.config['SECRET_KEY'] = settings.SECRET_KEY
+  
+  # Need to add CORS; throw in a couple extra headers while we are at it
+  @flask_app.after_request
+  def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    return response
 
 def initialize_app(flask_app):
   configure_app(flask_app)
@@ -33,6 +41,7 @@ def initialize_app(flask_app):
   db.init_app(flask_app)
   with app.app_context():
     db.create_all()
+    # init_database()
 
 
 def main():

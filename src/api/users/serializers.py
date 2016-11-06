@@ -2,6 +2,7 @@ from flask_restplus import fields
 from src.api.restplus import api
 
 ingredients = api.model('Ingredients', {
+  'id': fields.Integer(readOnly=True, description='The unique identifier of a ingredient'),
   'name': fields.String(required=True, description='Name of the ingredient'),
 })
 
@@ -31,6 +32,14 @@ user_info = api.model('UserInfo', {
 user_login = api.model('UserLogin', {
   'username': fields.String(required=True, description='Username of the user'),
   'password': fields.String(required=True, description='Password of the user')
+})
+
+user_auth = api.model('UserAuth', {
+  'id': fields.Integer(readOnly=True, description='The unique identifier of a user'),
+  'username': fields.String(required=True, description='Username of the user'),
+  'email': fields.String(required=True, description='Email of the user'),
+  'recipes': fields.List(fields.Nested(recipe)),
+  'token': fields.String(required=True, description='Security token for authorization')
 })
 
 user_registration = api.model('UserRegistration', {

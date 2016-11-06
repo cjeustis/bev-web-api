@@ -11,3 +11,6 @@ RESTPLUS_ERROR_404_HELP = False
 # SQLAlchemy settings
 SQLALCHEMY_DATABASE_URI = 'sqlite:///db.sqlite3'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# Security settings
+SECRET_KEY = "this_is_a_secret_0192837465)!@(*#$&^%)"

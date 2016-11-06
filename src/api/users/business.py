@@ -1,32 +1,30 @@
 import logging
 from flask import jsonify
+from functools import wraps
 from src.database import db
 from src.database.models import User, Recipe, Ingredients
 from itsdangerous import JSONWebSignatureSerializer
 from flask.ext.httpauth import HTTPBasicAuth
 
 auth = HTTPBasicAuth()
-authUser = User("", "", "")
+authUser = User("", "", "", False)
 
 secret_key = "this_is_a_secret_0192837465)!@(*#$&^%)"
 s = JSONWebSignatureSerializer(secret_key)
 log = logging.getLogger(__name__)
 
 
-@auth.verify_password
-def verify_password(username_or_token, password):
-  global authUser
-  log.info("username_or_token: {}".format(username_or_token))
-  token_state = authUser.verify_auth_token()
-  log.info("Token state: {}".format(token_state))
-  if token_state is not "Valid":
-    # Try out username/password combo - don't really want this so leave it out for now
-    # user = User.query.filter_by(username=username_or_token).first()
-    # if not user or not user.verify_password(password):
-    log.info("not authenticated")
-    return False
-  log.info("authenticated")
-  return True
+def verify_token(f):
+  @wraps(f)
+  def verify_token(*args, **kwargs):
+    global authUser
+    token_state = authUser.verify_auth_token()
+    if token_state is not "Valid":
+      return {
+        "message": "User cannot be authenticated: {} token".format(token_state)
+      }
+    return f(*args, **kwargs)
+  return verify_token
 
 
 def authenticate_user(data):
@@ -34,19 +32,24 @@ def authenticate_user(data):
   _username = data.get('username')
   _password = data.get('password')
 
-  authUser = User.query.filter(User.username == _username).first()
-  if authUser is None:
+  user = User.query.filter(User.username == _username).first()
+  if user is None:
     return {
       "message": "Error authenticating user. Username '{}' does not exist.".format(_username)
     }
+  if not user.verify_password(_password):
+    return {
+      "message": "Error authenticating user. Password is invalid."
+    }
   
-  token = authUser.generate_auth_token()
-  return {
-    "token": token.decode('ascii')
-  }
-  return {
-    "message": "Error authenticating user. Password is invalid."
-  }
+  if user.username != authUser.username:
+    token = user.generate_auth_token()
+    authUser = user
+  else:
+    token = authUser.generate_auth_token()
+
+  user.token = token
+  return user
 
 
 # Log out a User
@@ -59,6 +62,7 @@ def unauthenticate_user(user_id):
 
 # Create a new user
 def create_user(data):
+  global authUser
   _username = data.get('username')
   _email = data.get('email')
   _password = data.get('password')
@@ -70,10 +74,10 @@ def create_user(data):
       "message": "Error creating user. Username '{}' already exists.".format(_username)
     }
 
-  user = User(_username, _email, _password)
-  db.session.add(user)
+  authUser = User(_username, _email, _password)
+  db.session.add(authUser)
   db.session.commit()
-  return user
+  return authUser
 
 
 # Try and find an existing user
