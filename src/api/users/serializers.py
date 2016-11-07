@@ -49,6 +49,7 @@ user_registration = api.model('UserRegistration', {
   'password': fields.String(required=True, description='Password of the user')
 })
 
-token_required = api.model('TokenRequired', {
-  'token': fields.String(required=True, description='Security token for authorization')
+token_response = api.model('TokenResponse', {
+  'token': fields.String(required=True, description='Security token for authorization'),
+  'user': fields.Nested(user_info)
 })

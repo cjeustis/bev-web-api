@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from passlib.apps import custom_app_context as pwd_context
 from src.database import db
 from api.restplus import api
@@ -57,7 +57,7 @@ class User(db.Model):
   password = db.Column(db.String(200))
   created = db.Column(db.DateTime)
   recipes = db.relationship('Recipe', backref='user', lazy='dynamic')
-  _token = ""
+  token = db.Column(db.String(250))
 
   def hash_password(self, password):
     self.password = pwd_context.encrypt(password)
@@ -65,26 +65,32 @@ class User(db.Model):
   def verify_password(self, password):
     return pwd_context.verify(password, self.password)
 
-  def generate_auth_token(self, expiration = 20):
+  def generate_auth_token(self, expiration = (60 * 10)):  # 60 * x mins - will probably want to increase this
     # Check if valid token already exists, otherwise we can generate a new one
-    token_state = self.verify_auth_token()
-    if token_state is "Valid":
-      return self._token
+    if self.token is not None:
+      token_state = User.verify_auth_token(self.token)
+      if token_state is "Valid":
+        log.info("Token is valid...returning")
+        return self.token
     s = Serializer(secret_key, expires_in = expiration)
-    self._token = s.dumps({ 'id': self.id })
-    return self._token
+    self.token = s.dumps({ 'id': self.id })
+    return self.token
+  
+  def getID(self):
+    return self.id
 
-  def verify_auth_token(self):
+  @staticmethod
+  def verify_auth_token(token):
     s = Serializer(secret_key)
     try:
-      data = s.loads(self._token)
+      data = s.loads(token)
     except SignatureExpired:
       return "Expired"
     except BadSignature:
       return "Invalid"
     return "Valid"
 
-  def __init__(self, username, email, password, createToken=True, recipes=[], created=None):
+  def __init__(self, username, email, password, recipes=[], created=None):
     self.username = username
     self.email = email
     self.password = pwd_context.encrypt(password)
@@ -92,5 +98,7 @@ class User(db.Model):
     if created is None:
       created  = datetime.utcnow()
     self.created = created
-    if createToken:
-      self._token = self.generate_auth_token()
+    self.token = self.generate_auth_token()
+
+  def __repr__(self):
+    return '<User: id: %s, username: %s, email: %s, password: %s, token: %s>' % (self.id, self.username, self.email, self.password, self.token)

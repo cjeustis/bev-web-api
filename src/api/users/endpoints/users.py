@@ -13,11 +13,11 @@ ns = api.namespace('users', description='Operations related to user accounts')
 
 """ USER """
 @ns.route('/register')
+@api.response(404, "{'message': 'string'}")
 class UserAccountsCollection(Resource):
 
   @api.expect(user_registration)
-  @api.marshal_with(user_info)  # without this, still saves to db just doesn't know how to return (serialize) the data
-  @api.response(404, "{'message': 'string'}")
+  @api.marshal_with(token_response)
   def post(self):
     """
     Creates a new user account.
@@ -29,8 +29,7 @@ class UserAccountsCollection(Resource):
 class UserAccountsAuthentication(Resource):
 
   @api.expect(user_login)
-  # @api.response(201, "User is authenticated", user_auth)
-  @api.marshal_with(user_auth)
+  @api.marshal_with(token_response)
   def post(self):
     """
     Sign in and authenticate a user.
@@ -40,6 +39,7 @@ class UserAccountsAuthentication(Resource):
 
 @ns.route('/<int:id>')
 @api.response(404, "{'message': 'string'}")
+@api.header('Auth-Token', 'Authorization token')
 class UserAccount(Resource):
 
 
@@ -70,6 +70,7 @@ class UserAccount(Resource):
 
   @ns.route('/<int:id>/logout')
   @api.response(404, "{'message': 'string'}")
+  @api.header('Auth-Token', 'Authorization token')
   class UserAccountLogoutCollection(Resource):
     
     @verify_token
@@ -82,6 +83,7 @@ class UserAccount(Resource):
 
   @ns.route('/<int:id>/recipes')
   @api.response(404, "{'message': 'string'}")
+  @api.header('Auth-Token', 'Authorization token')
   class UserAccountRecipesCollection(Resource):
     
     @api.expect(recipe)
@@ -103,6 +105,7 @@ class UserAccount(Resource):
 
     @ns.route('/<int:id>/recipes/<int:recipe_id>')
     @api.response(404, "{'message': 'string'}")
+    @api.header('Auth-Token', 'Authorization token')
     class UserAccountRecipes(Resource):
 
       @api.marshal_with(recipe)
